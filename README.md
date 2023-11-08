@@ -1,2 +1,0 @@
-# ParallelMatrix
-Parallel Matrix Algorithms

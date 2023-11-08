@@ -4,6 +4,7 @@ package matrix;
 public class MatrixMain {
 	
 	public Double[][] A;
+	public Double[][] B;
 	public Double[][] L;
 	public double det;
 	public int n;
@@ -16,6 +17,28 @@ public class MatrixMain {
 				System.out.print(",");
 			}
 			System.out.println(" ");
+		}
+	}
+	
+	public void saxpy(int i, int n, int k, Double[][] A) {
+		for (int j = k+1; j < n; j++) {
+			A[i][j] = A[i][j] + A[i][k] * A[k][j];
+		}
+	}
+	
+	public void KIJ (Double[][] A) {
+		for (int k = 0; k < n; k++) {
+			
+			for(int i = k+1; i < n; i++) {
+				//A[i][k] = -A[i][k] / A[k][k];
+			}
+			//Parallel might need a sync step here
+
+			
+			for(int i = k+1; i < n; i++) {
+				A[i][k] = -A[i][k] / A[k][k];
+				saxpy(i,n,k,A);
+			}
 		}
 	}
 	
@@ -43,11 +66,11 @@ public class MatrixMain {
 				}
 			}
 		}
-		/*
+		
 		//Invert U
 		for (int k = 0; k < n; k++) {
 			A[k][k] = 1/A[k][k];
-			for(int i = k+1; i < k; i++) {
+			for(int i = k; i < k; i++) {
 				for (int j = k; j < i; j++) {
 					A[k][i] = -A[j][i] * (A[k][j] / A[k][k]);
 				}
@@ -82,6 +105,9 @@ public class MatrixMain {
 		A = new Double[][]{ {2.0,-1.0,-2.0},
 						{-4.0,6.0,3.0},
 						{-4.0,-2.0,8.0}};
+		B = new Double[][]{ {2.0,-1.0,-2.0},
+							{-4.0,6.0,3.0},
+							{-4.0,-2.0,8.0}};
 		L = new Double[][]{ {0.0,0.0,0.0},
 							{0.0,0.0,0.0},
 							{0.0,0.0,0.0}};
@@ -89,13 +115,16 @@ public class MatrixMain {
 		det = 0;
 		printArr2d(A,"A");
 		
-		Invert(A);
+		//Invert(A);
 		//Determinant(A);
+		
+		Gaussian(A);
+		KIJ(B);
 		printArr2d(A,"A");
-		System.out.println("det: "+det);
-		System.out.println(A[0][1]);
-		System.out.println(A[1][0]);
-		printArr2d(L,"L");
+		//System.out.println("det: "+det);
+		//System.out.println(A[0][1]);
+		//System.out.println(A[1][0]);
+		printArr2d(B,"B");
 		
 	}
 	
