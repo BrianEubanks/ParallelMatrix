@@ -41,7 +41,7 @@ public class MatrixMain {
 			}
 		}
 	}
-	
+
 	public void Gaussian(Double[][] A) {
 		for (int k = 0; k < n; k++) {
 			for(int i = k+1; i < n; i++) {
@@ -52,12 +52,80 @@ public class MatrixMain {
 			}
 		}
 	}
+
+	public void Crout(Double[][] A) {
+		Double[][] lu = new Double[n][n];
+		for (int i = 0; i < n; i++) {
+			lu[i][i] = 1.0;
+		}
+
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				if (j >= i) {
+					lu[i][j] = A[i][j];
+					for(int k = 0; k < i; k++)
+						lu[i][j] = lu[i][j] -  lu[k][j] * lu[i][k];
+				}
+				if (j > i) {
+					lu[j][i] = A[j][i];
+					for(int k = 0; k < i; k++)
+						lu[j][i] = lu[j][i] - lu[k][i] * lu[j][k];
+					lu[j][i] = lu[j][i] / lu[i][i];
+				}
+			}
+		}
+
+//		Double[][] L = new Double[n][n];
+//		Double[][] U = new Double[n][n];
+//
+//		for (int i = 0; i < n; i++) {
+//			U[i][i] = 1.0;
+//		}
+//
+//		for (int j = 0; j < n; j++) {
+//			for (int i = j; i < n; i++) {
+//				double sum = 0.0;
+//				for (int k = 0; k < j; k++) {
+//					sum += L[i][k] * U[k][j];
+//				}
+//				L[i][j] = A[i][j] - sum;
+//			}
+//
+//			for (int i = j; i < n; i++) {
+//				double sum = 0.0;
+//				for (int k = 0; k < j; k++) {
+//					sum += L[j][k] * U[k][i];
+//				}
+//				U[j][i] = (A[j][i] - sum) / L[j][j];
+//			}
+//		}
+		printArr2d(lu, "LU");
+//		A = LU;
+
+//		for (int i = 0; i < n; i++) {
+//			// Crout elimination in frontal column
+//			for (int j = i; j < n; j++) {
+//				double prodIn = 0.0;
+//				for (int k = 0; k < i; k++) {
+//					prodIn += A[j][k] * A[k][i];
+//				}
+//				A[i][j] -= prodIn;
+//			}
+//
+//			// Crout elimination in frontal row
+//			for (int j = i+1; j < n; j++) {
+//				double prodIn = 0.0;
+//				for (int k = 0; k < i; k++) {
+//					prodIn += A[i][k] * A[k][j];
+//				}
+//				A[i][j] -= prodIn;
+//			}
+//		}
+	}
 	
 	public void Invert(Double[][] A) {
 		Gaussian(A);
-		
 		//Invert L
-		
 		for (int k = 0; k < n; k++) {
 			L[k][k] = 1/A[k][k];
 			for(int i = k; i < k; i++) {
@@ -119,8 +187,9 @@ public class MatrixMain {
 		//Determinant(A);
 		
 		Gaussian(A);
-		KIJ(B);
+//		KIJ(B);
 		printArr2d(A,"A");
+		Crout(B);
 		//System.out.println("det: "+det);
 		//System.out.println(A[0][1]);
 		//System.out.println(A[1][0]);
