@@ -38,26 +38,27 @@ public class MatrixMain {
 	}
 
 	
-    public class Worker implements Runnable {
+    public class Saxpy implements Runnable {
         int i;
         int k;
         int j;
+        int n;
         Double[][] Arr;
  
-        Worker(int i, int j, int k, Double[][] Arr) {
+        Saxpy(int i,  int k, Double[][] Arr) {
             this.i = i;
             this.k = k;
-            this.j = j;
             this.Arr = Arr;
+            this.n = Arr[0].length;
         }
  
         @Override
         public void run() {
-            //for (int j = k+1; j < n; j++) {
         	//System.out.println("  ThreadStart: "+j);
-        	Arr[i][j] = Arr[i][j] - Arr[i][k] * Arr[k][j];
+            for (int j = k+1; j < n; j++) {
+            	Arr[i][j] = Arr[i][j] - Arr[i][k] * Arr[k][j];
+            }
         	//System.out.println("  ThreadDone : "+j);
-           // }
         }
     }
 
@@ -71,7 +72,7 @@ public class MatrixMain {
 				}
 			}
 		}	
-		printArr2d(A,"A Gauss");
+		//printArr2d(A,"A Gauss");
 		return A;
 	}
 	
@@ -83,36 +84,17 @@ public class MatrixMain {
 			for(int i = k+1; i < n; i++) {
 				A[i][k] = (1 / A[k][k]) * A[i][k];
 			
-				//Parallel might need a sync step here
-				//for (int j = k+1; j < n; j++) {
-				//	A[i][j] = A[i][j] - A[i][k] * A[k][j];
-				//}
-			
-				//for(int j = k+1; j < n; j++) {
-					//A[i][k] = -A[i][k] / A[k][k];
-				//	saxpy_row(i,n,k,A);
-				//}
-		        // declaring four threads
-				//System.out.println("I: "+i);
-
-		 
-		        // Creating four threads, each evaluating its own part
-		        for (int j = k+1; j < n; j++) {
-		            threads[j] = new Thread(new Worker(i,j,k,A));
-		            threads[j].start();
-		        }
-		 
-		        // joining and waiting for all threads to complete
-		        for (int j = k+1; j < n; j++) {
-		            try {
-		                threads[j].join();
-		            } catch (InterruptedException e) {
-		                e.printStackTrace();
-		            }
-		        }
+	            threads[i] = new Thread(new Saxpy(i,k,A));
+	            threads[i].start();
+	            try {
+					threads[i].join();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
-		printArr2d(A,"A GaussPar");
+		//printArr2d(A,"A GaussPar");
 		return A;
 	}
 	
@@ -205,7 +187,7 @@ public class MatrixMain {
 							{-3.0,-6.0,26.0,2.0}};
 
 
-		Double[][] F = generateMatrix(100);
+		Double[][] F = generateMatrix(500);
 		Double[][] F2 = arr2dCopy(F);
 		
 		//Double[][] F = B;
@@ -216,29 +198,32 @@ public class MatrixMain {
 		long seqtime;
 		long partime;
 		
-		System.out.println("input");
-		printArr2d(F,"C");
-		
-		System.out.println("lu");
-		start = System.currentTimeMillis();
-		printArr2d(Gaussian(F),"C");
-		stop = System.currentTimeMillis();
-		seqtime = stop-start;
-		
-		System.out.println("input");
+		//System.out.println("input");
 		//printArr2d(F,"C");
 		
-		System.out.println("lu");
+		System.out.println("Sequential-lu");
+		start = System.currentTimeMillis();
+		//printArr2d(Gaussian(F),"C");
+		Gaussian(F);
+		stop = System.currentTimeMillis();
+		seqtime = stop-start;
+		System.out.println("Seq Time: "+seqtime);
+		
+		//System.out.println("input");
+		//printArr2d(F,"C");
+		
+		System.out.println("Parallel-lu");
 		start = System.currentTimeMillis();
 		//printArr2d(GaussianPar(F2),"C");
 		GaussianPar(F2);
 		stop = System.currentTimeMillis();
 		partime = stop-start;
+		System.out.println("Par Time: "+partime);
 		
 		//printArr2d(Invert(A),"Ainv");
 		System.out.println("done");
-		System.out.println("seq: "+seqtime);
-		System.out.println("par: "+partime);
+
+
 
 		
 
