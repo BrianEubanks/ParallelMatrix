@@ -43,6 +43,87 @@ int *saxpy_fn(void *ptr){
     return 0;
 }
 
+int *crout_L_fn(void *ptr){
+    int i;
+    int j;
+    int k;
+    double** A;
+    double** L;
+    double** U;
+    int n;
+    int sum;
+    
+    i = ((struct args*) ptr)->i;
+    //j = ((struct croutargs*) ptr)->j;
+    n = ((struct croutargs*) ptr)->size;
+    A = ((struct croutargs*) ptr)->A;
+    L = ((struct croutargs*) ptr)->L;
+    U = ((struct croutargs*) ptr)->U;
+
+    for (int j = 0; j < n; j++)
+    {
+
+        if (j < i) {
+            L[j][i] = 0;
+            continue;
+        }
+
+        L[j][i] = A[j][i];
+        for (int k = 0; k < i; k++) {
+            L[j][i] = L[j][i] - L[j][k] * U[k][i];
+        }
+    }
+    
+    return 0;
+}
+
+int *crout_U_fn(void *ptr){
+    int i;
+    int j;
+    int k;
+    double** A;
+    double** L;
+    double** U;
+    int n;
+    int sum;
+
+    i = ((struct args*) ptr)->i;
+    //j = ((struct croutargs*) ptr)->j;
+    n = ((struct croutargs*) ptr)->size;
+    A = ((struct croutargs*) ptr)->A;
+    L = ((struct croutargs*) ptr)->L;
+    U = ((struct croutargs*) ptr)->U;
+
+    for (int j = 0; j < n; j++) {
+        if (j < i) {
+            U[i][j] = 0;
+            continue;
+        }
+        
+        if (j == i) {
+            U[i][j] = 1;
+            continue;
+        }
+        
+        U[i][j] = A[i][j] / L[i][i];
+        for (int k = 0; k < i; k++) {
+            U[i][j] = U[i][j] - ((L[i][k] * U[k][j]) / L[i][i]);
+        }
+    }
+    return 0;
+    
+}
+
+
+void matrixMult(double**a, double** b, double** c, int n){
+    for(int i = 0; i < n; i++){
+        for (int j = 0; j < n; j++){
+            for (int k = 0; k < n; k++){
+                c[i][j]+=a[i][k]*b[k][j];
+            }
+        }
+    }
+}
 
 double** getMatrix(int row, int col){
     int i;
@@ -70,27 +151,6 @@ void printMatrix(double** arr, int row, int col){
         }
         printf("\n");
     }
-}
-
-
-void demo(){
-    int r = 3, c = 4, i, j, count;
-    double** matrix;
- 
-    // Note that arr[i][j] is same as *(*(arr+i)+j)
-
-    matrix = getMatrix(r,c);
-
-    count = 0;
-    for (i = 0; i < r; i++)
-        for (j = 0; j < c; j++)
-            matrix[i][j] = ++count; // OR *(*(arr+i)+j) = ++count
- 
-    printMatrix(matrix,r,c);
-
-    printf("%f\n",matrix[1][2]);
- 
-    freeMatrix(matrix,r);
 }
 
 void Gaussian(double** A, int row) {
@@ -188,31 +248,30 @@ void GaussianCompLU(double** A, double** L, double** U, int row) {
                 U[i][j] = U[i][j] - ((L[i][k] * U[k][j])/L[i][i]);
             }
         }
-        /*
-        for (int j = i+1; j < n; j++) {
-            //A[j][i] = A[j][i] - A[j][k] * A[k][i];
-            A[i][i] = A[j][i] / A[i][i];
-        }*/
-       
     }
 }
 
-void matrixMult(double**a, double** b, double** c, int n){
-    for(int i = 0; i < n; i++){
-        for (int j = 0; j < n; j++){
-            for (int k = 0; k < n; k++){
-                c[i][j]+=a[i][k]*b[k][j];
-            }
-        }
-    }
-}
 
 void GaussianCompLU2(double** a, double** l, double** u, int size) {
+
+    struct croutargs crout_data;
     
-    //for each column...
+    crout_data.size = size;
+    crout_data.A = a;
+    crout_data.L = l;
+    crout_data.U = u;
+    
+    pthread_t t_crout_L;
+    pthread_t t_crout_U;
+    
     for (int i = 0; i < size; i++)
     {
-        //for each row....
+        
+        //L
+        crout_data.i = i;
+        pthread_create(&t_crout_L,NULL,(void*)crout_L_fn,(void*)&crout_data);
+
+        /*
         for (int j = 0; j < size; j++)
         {
             //if j is smaller than i, set l[j][i] to 0
@@ -229,7 +288,12 @@ void GaussianCompLU2(double** a, double** l, double** u, int size) {
                 l[j][i] = l[j][i] - l[j][k] * u[k][i];
             }
         }
-        //for each row...
+*/
+        
+        //U
+        pthread_create(&t_crout_U,NULL,(void*)crout_U_fn,(void*)&crout_data);
+
+        /*
         for (int j = 0; j < size; j++)
         {
             //if j is smaller than i, set u's current index to 0
@@ -250,8 +314,12 @@ void GaussianCompLU2(double** a, double** l, double** u, int size) {
             {
                 u[i][j] = u[i][j] - ((l[i][k] * u[k][j]) / l[i][i]);
             }
-            
-        }
+         }
+            */
+        
+        pthread_join(t_crout_L,NULL);
+        pthread_join(t_crout_U,NULL);
+        
     }
 }
 void GaussianPar(double** A, int row) {
@@ -283,78 +351,6 @@ void GaussianPar(double** A, int row) {
     }   
 }
 
-void crout(double **A, double **L, double **U, int n) {
-    int i, j, k;
-    double sum = 0;
-
-    printf("c\n");
-    for (i = 0; i < n; i++) {
-        U[i][i] = 1;
-    }
-
-    for (j = 0; j < n; j++) {
-        for (i = j; i < n; i++) {
-            sum = 0;
-            for (k = 0; k < j; k++) {
-                sum = sum + L[i][k] * U[k][j];
-            }
-            L[i][j] = A[i][j] - sum;
-        }
-
-        for (i = j; i < n; i++) {
-            sum = 0;
-            for(k = 0; k < j; k++) {
-                sum = sum + L[j][k] * U[k][i];
-            }
-            if (L[j][j] == 0) {
-                printf("det(L) close to 0!\n Can't divide by 0...\n");
-                exit(EXIT_FAILURE);
-            }
-            U[j][i] = (A[j][i] - sum);/// L[j][j];
-        }
-        
-        for (i = j; i < n; i++) {
-            if (L[j][j] == 0) {
-                printf("det(L) close to 0!\n Can't divide by 0...\n");
-                exit(EXIT_FAILURE);
-            }
-            U[j][i] = U[j][i] / L[j][j];
-        }
-    }
-}
-
-void croutPar(double **A, double **L, double **U, int n) {
-    int i, j, k;
-    double sum = 0;
-
-    printf("c\n");
-    for (i = 0; i < n; i++) {
-        U[i][i] = 1;
-    }
-
-    for (j = 0; j < n; j++) {
-        for (i = j; i < n; i++) {
-            sum = 0;
-            for (k = 0; k < j; k++) {
-                sum = sum + L[i][k] * U[k][j];
-            }
-            L[i][j] = A[i][j] - sum;
-        }
-
-        for (i = j; i < n; i++) {
-            sum = 0;
-            for(k = 0; k < j; k++) {
-                sum = sum + L[j][k] * U[k][i];
-            }
-            if (L[j][j] == 0) {
-                printf("det(L) close to 0!\n Can't divide by 0...\n");
-                exit(EXIT_FAILURE);
-            }
-            U[j][i] = (A[j][i] - sum) / L[j][j];
-        }
-    }
-}
-
 void initMatrix(double** arr, int row, int col){
     int i,j;
 
@@ -370,7 +366,7 @@ int main()
 {
     //demo();
 
-    int row = 4;
+    int row = 2000;
     int col = row;
     double** matrix;
     double** C;
@@ -396,7 +392,7 @@ int main()
     matrix[2][2]= 8.0;
 
     
-*/
+
     matrix[0][0]= 1.0 ;
     matrix[0][1]= -2.0;
     matrix[0][2]= -2.0;
@@ -413,42 +409,44 @@ int main()
     matrix[3][1]= -6.0;
     matrix[3][2]= 26.0;
     matrix[3][3]= 2.0;
-
+*/
 
     initMatrix(matrix,row,col);
 
-    printMatrix(matrix,row,col);
+    //printMatrix(matrix,row,col);
     //printf("%f\n",matrix[1][2]);
     
-    printMatrix(L,row,col);
-    printMatrix(U,row,col);
+    //printMatrix(L,row,col);
+    //printMatrix(U,row,col);
     
 
-
+    printf("start\n");
     clock_t begin = clock();
 
-    //GaussianCompLU2(matrix,L,U,row);
+    GaussianCompLU2(matrix,L,U,row);
     //GaussianComp(matrix,row);
-    crout(matrix,L,U,row);
+    //crout(matrix,L,U,row);
 
     clock_t end = clock();
+    printf("end\n");
 
-    printMatrix(matrix,row,col);
-    printf("\n");
+    //printMatrix(matrix,row,col);
+    //printf("\n");
     
-    printMatrix(L,row,col);
-    printf("\n");
+    //printMatrix(L,row,col);
+    //printf("\n");
 
-    printMatrix(U,row,col);
+    //printMatrix(U,row,col);
     
-    matrixMult(L,U,C,row);
-    printf("\n");
-    printMatrix(C,row,col);
+    //matrixMult(L,U,C,row);
+    //printf("\n");
+    //printMatrix(C,row,col);
 
  
     freeMatrix(matrix,row);
     freeMatrix(L,row);
     freeMatrix(U,row);
+    freeMatrix(C,row);
 
 
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
