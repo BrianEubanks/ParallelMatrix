@@ -148,6 +148,76 @@ public class MatrixMain {
 		//printArr2d(A,"A Gauss");
 		return A;
 	}
+
+	public void CroutSequential(Double[][] A) {
+		Double[][] lu = new Double[n][n];
+		for (int i = 0; i < n; i++) {
+			lu[i][i] = 1.0;
+		}
+
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				if (j >= i) {
+					lu[i][j] = A[i][j];
+					for(int k = 0; k < i; k++)
+						lu[i][j] = lu[i][j] -  lu[k][j] * lu[i][k];
+				}
+				if (j > i) {
+					lu[j][i] = A[j][i];
+					for(int k = 0; k < i; k++)
+						lu[j][i] = lu[j][i] - lu[k][i] * lu[j][k];
+					lu[j][i] = lu[j][i] / lu[i][i];
+				}
+			}
+		}
+
+//		Double[][] L = new Double[n][n];
+//		Double[][] U = new Double[n][n];
+//
+//		for (int i = 0; i < n; i++) {
+//			U[i][i] = 1.0;
+//		}
+//
+//		for (int j = 0; j < n; j++) {
+//			for (int i = j; i < n; i++) {
+//				double sum = 0.0;
+//				for (int k = 0; k < j; k++) {
+//					sum += L[i][k] * U[k][j];
+//				}
+//				L[i][j] = A[i][j] - sum;
+//			}
+//
+//			for (int i = j; i < n; i++) {
+//				double sum = 0.0;
+//				for (int k = 0; k < j; k++) {
+//					sum += L[j][k] * U[k][i];
+//				}
+//				U[j][i] = (A[j][i] - sum) / L[j][j];
+//			}
+//		}
+		printArr2d(lu, "LU");
+//		A = LU;
+
+//		for (int i = 0; i < n; i++) {
+//			// Crout elimination in frontal column
+//			for (int j = i; j < n; j++) {
+//				double prodIn = 0.0;
+//				for (int k = 0; k < i; k++) {
+//					prodIn += A[j][k] * A[k][i];
+//				}
+//				A[i][j] -= prodIn;
+//			}
+//
+//			// Crout elimination in frontal row
+//			for (int j = i+1; j < n; j++) {
+//				double prodIn = 0.0;
+//				for (int k = 0; k < i; k++) {
+//					prodIn += A[i][k] * A[k][j];
+//				}
+//				A[i][j] -= prodIn;
+//			}
+//		}
+	}
 	
 	public Double[][] SerialRankTwo(Double[][] A) {
 		//Gaussian(A);
@@ -284,7 +354,6 @@ public class MatrixMain {
 			det*=A[i][i];
 		}
 	}
-	
 
 	
 	public Double[][] Invert2(Double[][] A) {
