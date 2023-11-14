@@ -19,3 +19,10 @@ gcc -pthread composite.c matrix.c
 ```
 a.out
 ```
+
+
+composite.c
+```
+    //GaussianCompLU2(matrix,L,U,row); //Parallel
+    GaussianCompLU(matrix,L,U,row); //Sequential
+```
