@@ -150,26 +150,77 @@ public class MatrixMain {
 	}
 
 	public void CroutSequential(Double[][] A) {
-		Double[][] lu = new Double[n][n];
-		for (int i = 0; i < n; i++) {
-			lu[i][i] = 1.0;
-		}
+//		int n = A.length;
+//		Double[][] l = new Double[n][n];
+//		Double[][] u = new Double[n][n];
+//
+//		for (int i = 0; i < n; i++) {
+//			l[i][i] = 1.0;
+//		}
+//
+//		for (int i = 0; i < n; i++) {
+//			for (int j = 0; j < n; j++) {
+//				if (j >= i) {
+//					u[i][j] = A[i][j];
+//					for(int k = 0; k < i; k++)
+//						u[i][j] = u[i][j] - u[k][j] * l[i][k];
+//				}
+//				if (j > i) {
+//					l[j][i] = A[j][i];
+//					for(int k = 0; k < i; k++)
+//						l[j][i] = l[j][i] - u[k][i] * l[j][k];
+//					l[j][i] = l[j][i] / u[i][i];
+//				}
+//			}
+//		}
+//		printArr2d(l, "l");
+//		printArr2d(u, "u");
+
+		// this works
+//		int n = A.length;
+//		Double[][] lu = new Double[n][n];
+//		for (int i = 0; i < n; i++) {
+//			lu[i][i] = 1.0;
+//		}
+//
+//		for (int i = 0; i < n; i++) {
+//			for (int j = 0; j < n; j++) {
+//				if (j >= i) {
+//					lu[i][j] = A[i][j];
+//					for(int k = 0; k < i; k++)
+//						lu[i][j] = lu[i][j] -  lu[k][j] * lu[i][k];
+//				}
+//				if (j > i) {
+//					lu[j][i] = A[j][i];
+//					for(int k = 0; k < i; k++)
+//						lu[j][i] = lu[j][i] - lu[k][i] * lu[j][k];
+//					lu[j][i] = lu[j][i] / lu[i][i];
+//				}
+//			}
+//		}
+//		printArr2d(lu, "LU");
+
+		// this works
+		int n = A.length;
+//		for (int i = 0; i < n; i++) {
+//			lu[i][i] = 1.0;
+//		}
 
 		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				if (j >= i) {
-					lu[i][j] = A[i][j];
-					for(int k = 0; k < i; k++)
-						lu[i][j] = lu[i][j] -  lu[k][j] * lu[i][k];
-				}
-				if (j > i) {
-					lu[j][i] = A[j][i];
-					for(int k = 0; k < i; k++)
-						lu[j][i] = lu[j][i] - lu[k][i] * lu[j][k];
-					lu[j][i] = lu[j][i] / lu[i][i];
-				}
+			for (int j = i; j < n; j++) {
+				double pin = 0.0;
+				for(int k = 0; k < i; k++)
+					pin += A[j][k] * A[k][i];
+				A[j][i] -= pin;
+			}
+			for (int j = i+1; j < n; j++) {
+				double pin = 0;
+				for(int k = 0; k < i; k++)
+					pin += A[i][k] * A[k][j];
+				A[i][j] -= pin;
 			}
 		}
+		printArr2d(A, "A");
 
 //		Double[][] L = new Double[n][n];
 //		Double[][] U = new Double[n][n];
@@ -195,7 +246,6 @@ public class MatrixMain {
 //				U[j][i] = (A[j][i] - sum) / L[j][j];
 //			}
 //		}
-		printArr2d(lu, "LU");
 //		A = LU;
 
 //		for (int i = 0; i < n; i++) {
@@ -447,9 +497,9 @@ public class MatrixMain {
 		//Double[][] F2 = arr2dCopy(F);
 		//Double[][] F3 = arr2dCopy(F);
 		
-		Double[][] F = A;
-		Double[][] F2 = arr2dCopy(F);
-		Double[][] F3 = arr2dCopy(F);
+//		Double[][] F = A;
+//		Double[][] F2 = arr2dCopy(F);
+//		Double[][] F3 = arr2dCopy(F);
 /*
 		
 		long start;
@@ -509,16 +559,18 @@ public class MatrixMain {
 		//printArr2d(F3,"C");
 		
 	*/
-		System.out.println("Sequential-lu");
+//		System.out.println("Sequential-lu");
 		//start = System.currentTimeMillis();
 		//printArr2d(Gaussian(F),"C");
-		Gaussian(F);
+//		Gaussian(F);
 		//stop = System.currentTimeMillis();
 		//seqtime = stop-start;
 		//System.out.println("Seq Time: "+seqtime);
-		printArr2d(F,"C");
+//		printArr2d(F,"C");
 		
-		printArr2d(SerialRankTwo(F2),"SerialRankTwo");
+//		printArr2d(SerialRankTwo(F2),"SerialRankTwo");
+		CroutSequential(A);
+//		printArr2d(A, "crout");
 		System.out.println("done");
 	
 
