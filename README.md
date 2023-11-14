@@ -7,11 +7,15 @@ C - C Implementations
 
 
 OSX
+```
 gcc composite.c matrix.c
+```
 
 Linux
+```
 gcc -pthread composite.c matrix.c
+```
 
-
+```
 a.out
-
+```
