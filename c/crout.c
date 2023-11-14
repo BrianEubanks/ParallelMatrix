@@ -3,19 +3,10 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <time.h>
+
+#include "matrix.h"
  
 
-double randDouble() 
-{
-    return (double) 1 + (rand() % 5);
-}
-
-struct args{
-    int i;
-    int k;
-    int size;
-    double** Arr;
-};
 
 struct croutargs{
     int i;
@@ -26,22 +17,6 @@ struct croutargs{
     double** U;
 };
 
-int *saxpy_fn(void *ptr){
-    int i;
-    int k;
-    double** Arr;
-    int n;
-
-    i = ((struct args*) ptr)->i;
-    k = ((struct args*) ptr)->k;
-    n = ((struct args*) ptr)->size;
-    Arr = ((struct args*) ptr)->Arr;
-
-    for (int j = k+1; j < n; j++) {
-        Arr[i][j] = Arr[i][j] - Arr[i][k] * Arr[k][j];
-    }
-    return 0;
-}
 
 int *crout_U_fn(void *ptr){
     int i;
@@ -103,73 +78,6 @@ int *crout_L_fn(void *ptr){
 }
 
 
-double** getMatrix(int row, int col){
-    int i;
-
-    double** arr = (double**)malloc(row * sizeof(double*));
-    for (i = 0; i < row; i++)
-        arr[i] = (double*)malloc(col * sizeof(double));
-
-    return arr;
-}
-
-void freeMatrix(double** arr, int row) {
-    for (int i = 0; i < row; i++)
-        free(arr[i]);
- 
-    free(arr);
-}
-
-void printMatrix(double** arr, int row, int col){
-    int i,j;
-
-    for (i = 0; i < row; i++){
-        for (j = 0; j < col; j++){
-            printf("%f ", arr[i][j]);
-        }
-        printf("\n");
-    }
-}
-
-
-void matrixMult(double**a, double** b, double** c, int n){
-    for(int i = 0; i < n; i++){
-        for (int j = 0; j < n; j++){
-            for (int k = 0; k < n; k++){
-                c[i][j]+=a[i][k]*b[k][j];
-            }
-        }
-    }
-}
-
-void GaussianPar(double** A, int row) {
-    int i;
-    int j;
-    int k;
-    int n = row;
-
-    pthread_t threads[n];
-
-    struct args saxpy_data;
-
-    for (int k = 0; k < n; k++) {
-        for(int i = k+1; i < n; i++) {
-            A[i][k] = A[i][k] / A[k][k];
-            saxpy_data.i=i;
-            saxpy_data.k=k;
-            saxpy_data.size=row;
-            saxpy_data.Arr=A;
-
-            pthread_create(&threads[i],NULL,(void*)saxpy_fn,(void*)&saxpy_data);
-
-        }
-        for(int i = k+1; i < n; i++) {
-
-            pthread_join(threads[i],NULL);
-
-        }
-    }   
-}
 
 void crout(double **A, double **L, double **U, int n) {
     int i, j, k;
@@ -226,22 +134,22 @@ void croutPar(double **A, double **L, double **U, int n) {
         U[i][i] = 1;
     }
     
-    struct croutargs crout_data;
+    struct croutargs crout_data[n];
     
-    crout_data.size = n;
-    crout_data.A = A;
-    crout_data.L = L;
-    crout_data.U = U;
+
     
     pthread_t t_crout_L;
     pthread_t t_crout_U;
 
     for (j = 0; j < n; j++) {
         
-        crout_data.j = j;
+        crout_data[j].size = n;
+        crout_data[j].A = A;
+        crout_data[j].L = L;
+        crout_data[j].U = U;
         
         // L
-        pthread_create(&t_crout_L,NULL,(void*)crout_L_fn,(void*)&crout_data);
+        pthread_create(&t_crout_L,NULL,(void*)crout_L_fn,(void*)&crout_data[j]);
 /*
         for (i = j; i < n; i++) {
             sum = 0;
@@ -285,15 +193,6 @@ void croutPar(double **A, double **L, double **U, int n) {
     }
 }
 
-void initMatrix(double** arr, int row, int col){
-    int i,j;
-
-    for (i = 0; i < row; i++){
-        for (j = 0; j < col; j++){
-            arr[i][j] = randDouble();
-        }
-    }
-}
 
 
 int main()
