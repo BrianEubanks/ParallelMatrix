@@ -7,10 +7,10 @@
 
 #define RUN_COUNT   100
 
-#define ROW_SIZE    4
+#define ROW_SIZE    2048
 
 #define MULT_PAR    1
-#define LU_PAR      1
+#define LU_PAR      0
 
 #define GS_OR_CRT   0
 
