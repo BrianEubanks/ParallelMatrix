@@ -6,7 +6,7 @@ import os
 def main():
     # find the files to read
     curr_dir_path = os.path.dirname(os.path.realpath(__file__))
-    data_path = os.path.join(curr_dir_path, '..', 'c', 'croutlu_mult_results')
+    data_path = os.path.join(curr_dir_path, '..', 'c', 'results', 'LU_PAR')
     f = []
     for (dirpath, dirnames, filenames) in walk(data_path):
         f.extend(filenames)
